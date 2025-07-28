@@ -1,6 +1,6 @@
 {
   "name": "ak-api-http",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "A framework-agnostic HTTP client library for TypeScript, built on Axios, with robust authentication, retry mechanisms, and custom interceptors.",
   "keywords": [
     "api",

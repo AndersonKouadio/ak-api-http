@@ -47,7 +47,7 @@ export interface ServiceConfig {
 }
 
 export interface SessionData {
-  accessToken?: string;
+  accessToken: string;
   [key: string]: any;
 }
 
