@@ -1,0 +1,80 @@
+{
+  "name": "ak-api-http",
+  "version": "1.0.0",
+  "description": "A framework-agnostic HTTP client library for TypeScript, built on Axios, with robust authentication, retry mechanisms, and custom interceptors.",
+  "keywords": [
+    "api",
+    "axios",
+    "http",
+    "client",
+    "authentication",
+    "retry",
+    "interceptors",
+    "typescript",
+    "framework-agnostic"
+  ],
+  "homepage": "https://github.com/AndersonKouadio/ak-api-http#readme",
+  "bugs": {
+    "url": "https://github.com/AndersonKouadio/ak-api-http/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AndersonKouadio/ak-api-http.git"
+  },
+  "license": "MIT",
+  "author": "Anderson Kouadio <andersonkouadio0109@gmail.com>",
+  "type": "commonjs",
+  "main": "dist/cjs/index.js",
+  "module": "dist/esm/index.js",
+  "types": "dist/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/types/index.d.ts",
+      "import": "./dist/esm/index.js",
+      "require": "./dist/cjs/index.js",
+      "default": "./dist/cjs/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "sideEffects": false,
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "clean": "rimraf dist",
+    "build": "npm run clean && npm run build:types && npm run build:cjs && npm run build:esm && npm run postbuild",
+    "build:cjs": "tsc --project tsconfig.cjs.json",
+    "build:esm": "tsc --project tsconfig.esm.json",
+    "build:types": "tsc --project tsconfig.types.json",
+    "postbuild": "node ./scripts/add-esm-package-json.js",
+    "test": "jest",
+    "test:coverage": "jest --coverage",
+    "lint": "eslint \"src/**/*.ts\" \"tests/**/*.ts\"",
+    "lint:fix": "eslint \"src/**/*.ts\" \"tests/**/*.ts\" --fix",
+    "prepublishOnly": "npm run build && npm test && npm run lint",
+    "prepare": "npm run build"
+  },
+  "peerDependencies": {
+    "axios": "^0.21.0 || ^1.11.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.32.0",
+    "@types/jest": "^30.0.0",
+    "@types/node": "^24.1.0",
+    "@typescript-eslint/eslint-plugin": "^8.38.0",
+    "@typescript-eslint/parser": "^8.38.0",
+    "eslint": "^9.32.0",
+    "eslint-plugin-jest": "^29.0.1",
+    "globals": "^16.3.0",
+    "jest": "^30.0.5",
+    "jest-environment-jsdom": "^30.0.5",
+    "rimraf": "^6.0.1",
+    "ts-jest": "^29.4.0",
+    "typescript": "^5.8.3"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}

@@ -1,0 +1,28 @@
+# Logs
+*.log
+npm-debug.log*
+
+# Dependencies
+node_modules/
+
+# IDE and OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Build artifacts
+dist/
+coverage/
+
+# NPM related
+*.tgz
+.npm/
+.npmrc
+
+# Environment variables
+.env
+.env.local
+
+# scripts
+scripts/add-esm-package-json.js

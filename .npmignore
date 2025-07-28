@@ -1,0 +1,32 @@
+# Fichiers de développement
+src/
+tests/
+*.test.ts
+*.spec.ts
+tsconfig*.json
+jest.config.js
+.eslintrc*
+
+# Outils de développement
+.vscode/
+.idea/
+*.log
+coverage/
+.nyc_output/
+
+# Git
+.git/
+.gitignore
+
+# CI/CD
+.github/
+.travis.yml
+.circleci/
+
+# Autres
+*.tgz
+.DS_Store
+Thumbs.db
+
+# scripts
+scripts/add-esm-package-json.js
