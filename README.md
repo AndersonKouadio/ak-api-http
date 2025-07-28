@@ -1,7 +1,3 @@
-Génial \! Je vais m'inspirer de cette structure pour créer un README percutant pour votre classe `Api` (`AK API HTTP`), en mettant en avant le besoin qu'elle résout et sa valeur ajoutée.
-
------
-
 # 🚀 AK API HTTP Client
 
 Une classe TypeScript robuste et flexible pour gérer toutes vos interactions API \! ✨
