@@ -1,0 +1,34 @@
+name: Publish to NPM
+
+on:
+  release:
+    types: [published] # Déclenche ce workflow lorsqu'une nouvelle release GitHub est publiée
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest # Exécute le job sur un runner Ubuntu
+    steps:
+      - uses: actions/checkout@v3 # Clone votre dépôt Git
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3 # Configure Node.js
+        with:
+          node-version: '18' # Version de Node.js à utiliser
+          registry-url: 'https://registry.npmjs.org' # Spécifie le registre npm
+
+      - name: Install dependencies
+        run: npm ci # Installe les dépendances (plus rapide et plus sûr pour CI/CD)
+
+      - name: Run lint
+        run: npm run lint # Exécute le linting
+
+      - name: Run tests
+        run: npm test # Exécute les tests
+
+      - name: Build
+        run: npm run build # Exécute votre script de build
+
+      - name: Publish to NPM
+        run: npm publish --access public # Publie sur npm (ajoutez --access public si package scoped)
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN_AK_API_HTTP }} # Utilise un token NPM secret pour l'authentification

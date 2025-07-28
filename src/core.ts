@@ -1,4 +1,4 @@
-import axios, { AxiosInstance, AxiosError, AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig } from "axios";
+import axios, { AxiosInstance, AxiosError, AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
 import {
   ApiConfig,
   HttpMethod,
@@ -11,19 +11,17 @@ import {
   AuthenticationError,
   ApiError,
   ServiceConfig,
-} from "./types";
+} from './types';
 
 export class Api {
   private axiosInstance: AxiosInstance;
   private currentToken: string | null = null;
-  private config: Required<ApiConfig>;
+  config: Required<ApiConfig>;
 
   constructor(options: ApiConfig) {
     if (options.enableAuth) {
       if (!options.getSession || !options.signOut) {
-        throw new Error(
-          "getSession and signOut functions are required when enableAuth is true"
-        );
+        throw new Error('getSession and signOut functions are required when enableAuth is true');
       }
     }
 
@@ -31,7 +29,7 @@ export class Api {
       baseUrl: options.baseUrl,
       timeout: options.timeout ?? 10000,
       headers: {
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
         ...options.headers,
       },
       enableAuth: options.enableAuth ?? true,
@@ -49,8 +47,8 @@ export class Api {
         ...options.services,
       },
       getSession: options.getSession ?? (async () => null),
-      signOut: options.signOut ?? (async () => { }),
-      onRequestError: options.onRequestError ?? (() => { }),
+      signOut: options.signOut ?? (async () => {console.log('Sign out');}),
+      onRequestError: options.onRequestError ?? (() => {console.log('Request error');}),
       debug: options.debug ?? false,
       onRequest: options.onRequest ?? ((config) => config),
       onResponse: options.onResponse ?? ((response) => response),
@@ -88,13 +86,16 @@ export class Api {
           };
 
           // Appliquer l'intercepteur utilisateur
-          let modifiedConfig = await Promise.resolve(this.config.onRequest(userConfig));
+          const modifiedConfig = await Promise.resolve(this.config.onRequest(userConfig));
 
-          // Reconvertir en InternalAxiosRequestConfig
+          // Reconvertir en InternalAxiosRequestConfig et MERGER les headers
           const internalConfig: InternalAxiosRequestConfig = {
             ...config,
             ...modifiedConfig,
-            headers: config.headers, // Garder les headers originaux d'Axios
+            headers: {
+              ...config.headers,
+              ...modifiedConfig.headers, // Merger les headers personnalisés
+            } as any,
           };
 
           // Assurer que headers ne soit jamais undefined
@@ -117,7 +118,7 @@ export class Api {
 
           return internalConfig;
         } catch (error) {
-          this.log("Erreur dans l'intercepteur de requête personnalisé", error);
+          this.log('Erreur dans l\'intercepteur de requête personnalisé', error);
           return Promise.reject(error);
         }
       },
@@ -129,10 +130,7 @@ export class Api {
         try {
           return await Promise.resolve(this.config.onResponse(response));
         } catch (error) {
-          this.log(
-            "Erreur dans l'intercepteur de réponse personnalisé (succès)",
-            error
-          );
+          this.log('Erreur dans l\'intercepteur de réponse personnalisé (succès)', error);
           return Promise.reject(error);
         }
       },
@@ -153,16 +151,13 @@ export class Api {
 
             await Promise.resolve(this.config.onResponse(responseForInterceptor));
           } catch (interceptorError) {
-            this.log(
-              "Erreur dans l'intercepteur de réponse personnalisé (erreur sans config)",
-              interceptorError
-            );
+            this.log('Erreur dans l\'intercepteur de réponse personnalisé (erreur sans config)', interceptorError);
           }
           return Promise.reject(error);
         }
 
         if (error.response?.status === 401) {
-          this.log("Erreur 401 détectée, déconnexion de l'utilisateur.");
+          this.log('Erreur 401 détectée, déconnexion de l\'utilisateur.');
           if (this.config.signOut) {
             await this.config.signOut();
           }
@@ -177,14 +172,9 @@ export class Api {
 
             await Promise.resolve(this.config.onResponse(responseForInterceptor));
           } catch (interceptorError) {
-            this.log(
-              "Erreur dans l'intercepteur de réponse personnalisé (401)",
-              interceptorError
-            );
+            this.log('Erreur dans l\'intercepteur de réponse personnalisé (401)', interceptorError);
           }
-          return Promise.reject(
-            new AuthenticationError("Unauthorized, user logged out.")
-          );
+          return Promise.reject(new AuthenticationError('Unauthorized, user logged out.'));
         }
 
         if (
@@ -201,10 +191,17 @@ export class Api {
           return this.axiosInstance(originalRequest);
         }
 
-        this.handleRequestError(error, {
-          endpoint: originalRequest.url || "",
-          method: (originalRequest.method?.toUpperCase() as HttpMethod) || "GET",
-          service: "private",
+        // CRÉER l'ApiError ici avant de le rejeter
+        const apiError = this.createApiError(error, {
+          endpoint: originalRequest.url || '',
+          method: (originalRequest.method?.toUpperCase() as HttpMethod) || 'GET',
+          service: 'private',
+        });
+
+        this.handleRequestError(apiError, {
+          endpoint: originalRequest.url || '',
+          method: (originalRequest.method?.toUpperCase() as HttpMethod) || 'GET',
+          service: 'private',
         });
 
         try {
@@ -218,18 +215,16 @@ export class Api {
 
           await Promise.resolve(this.config.onResponse(responseForInterceptor));
         } catch (interceptorError) {
-          this.log(
-            "Erreur dans l'intercepteur de réponse personnalisé (erreur finale)",
-            interceptorError
-          );
+          this.log('Erreur dans l\'intercepteur de réponse personnalisé (erreur finale)', interceptorError);
         }
 
-        return Promise.reject(error);
+        // Rejeter avec l'ApiError au lieu de l'erreur Axios originale
+        return Promise.reject(apiError);
       }
     );
   }
 
-  private async getCurrentToken(): Promise<string | null> {
+  async getCurrentToken(): Promise<string | null> {
     if (!this.config.enableAuth) return null;
 
     if (this.currentToken) return this.currentToken;
@@ -243,7 +238,7 @@ export class Api {
       }
       return token;
     } catch (error) {
-      this.log("Erreur lors de la récupération de la session", error);
+      this.log('Erreur lors de la récupération de la session', error);
       return null;
     }
   }
@@ -255,7 +250,7 @@ export class Api {
 
     const filteredParams: Record<string, string> = {};
     Object.entries(searchParams).forEach(([key, value]) => {
-      if (value !== undefined && value !== null && value !== "") {
+      if (value !== undefined && value !== null && value !== '') {
         filteredParams[key] = String(value);
       }
     });
@@ -278,15 +273,15 @@ export class Api {
     };
 
     switch (lowercaseMethod) {
-      case "post":
+      case 'post':
         return (await this.axiosInstance.post<T>(url, data, requestConfig)).data;
-      case "put":
+      case 'put':
         return (await this.axiosInstance.put<T>(url, data, requestConfig)).data;
-      case "patch":
+      case 'patch':
         return (await this.axiosInstance.patch<T>(url, data, requestConfig)).data;
-      case "delete":
+      case 'delete':
         return (await this.axiosInstance.delete<T>(url, requestConfig)).data;
-      case "get":
+      case 'get':
       default:
         return (await this.axiosInstance.get<T>(url, requestConfig)).data;
     }
@@ -297,30 +292,26 @@ export class Api {
     method,
     data,
     searchParams,
-    service = "private",
+    service = 'private',
     config = {},
   }: RequestConfig): Promise<T> {
-    try {
-      this.log(`${method} ${endpoint}`, { data, searchParams, service });
+    this.log(`${method} ${endpoint}`, { data, searchParams, service });
 
-      const serviceConfig = await this.getServiceConfig(service, config);
-      const url = this.buildUrl(endpoint, searchParams);
+    const serviceConfig = await this.getServiceConfig(service, config);
+    const url = this.buildUrl(endpoint, searchParams);
 
-      return await this.executeRequest<T>(method, url, data, serviceConfig);
-    } catch (error) {
-      throw error;
-    }
+    return await this.executeRequest<T>(method, url, data, serviceConfig);
   }
 
   public get<T = any>(
     endpoint: string,
     searchParams?: SearchParams,
-    service: "public" | "private" | ServiceType = "private",
+    service: 'public' | 'private' | ServiceType = 'private',
     config?: AxiosRequestConfig
   ): Promise<T> {
     return this.request<T>({
       endpoint,
-      method: "GET",
+      method: 'GET',
       searchParams,
       service,
       config,
@@ -330,12 +321,12 @@ export class Api {
   public post<T = any>(
     endpoint: string,
     data?: any,
-    service: "public" | "private" | ServiceType = "private",
+    service: 'public' | 'private' | ServiceType = 'private',
     config?: AxiosRequestConfig
   ): Promise<T> {
     return this.request<T>({
       endpoint,
-      method: "POST",
+      method: 'POST',
       data,
       service,
       config,
@@ -345,12 +336,12 @@ export class Api {
   public put<T = any>(
     endpoint: string,
     data?: any,
-    service: "public" | "private" | ServiceType = "private",
+    service: 'public' | 'private' | ServiceType = 'private',
     config?: AxiosRequestConfig
   ): Promise<T> {
     return this.request<T>({
       endpoint,
-      method: "PUT",
+      method: 'PUT',
       data,
       service,
       config,
@@ -360,12 +351,12 @@ export class Api {
   public patch<T = any>(
     endpoint: string,
     data?: any,
-    service: "public" | "private" | ServiceType = "private",
+    service: 'public' | 'private' | ServiceType = 'private',
     config?: AxiosRequestConfig
   ): Promise<T> {
     return this.request<T>({
       endpoint,
-      method: "PATCH",
+      method: 'PATCH',
       data,
       service,
       config,
@@ -374,12 +365,12 @@ export class Api {
 
   public delete<T = any>(
     endpoint: string,
-    service: "public" | "private" | ServiceType = "private",
+    service: 'public' | 'private' | ServiceType = 'private',
     config?: AxiosRequestConfig
   ): Promise<T> {
     return this.request<T>({
       endpoint,
-      method: "DELETE",
+      method: 'DELETE',
       service,
       config,
     });
@@ -398,7 +389,7 @@ export class Api {
   }
 
   private async getServiceConfig(
-    service: "public" | "private" | ServiceType,
+    service: 'public' | 'private' | ServiceType,
     config: AxiosRequestConfig
   ): Promise<AxiosRequestConfig> {
     const serviceConfig = this.config.services[service];
@@ -407,12 +398,11 @@ export class Api {
       throw new ApiError(`Service '${service}' not found in configuration`);
     }
 
-    const headers = { ...config.headers };
+    const headers = { ...config.headers } as InternalAxiosRequestConfig['headers'];
 
     if (serviceConfig.enableAuth && this.config.enableAuth) {
       const token = await this.getCurrentToken();
       if (token) {
-        //@ts-ignore
         headers.Authorization = `Bearer ${token}`;
       }
     }
@@ -424,15 +414,16 @@ export class Api {
     };
   }
 
-  private handleRequestError(
+  // NOUVELLE méthode pour créer une ApiError à partir d'une AxiosError
+  private createApiError(
     error: any,
     context: {
       endpoint: string;
       method: HttpMethod;
-      service?: "public" | "private" | ServiceType;
+      service?: 'public' | 'private' | ServiceType;
     }
-  ): void {
-    const apiError = new ApiError(
+  ): ApiError {
+    return new ApiError(
       error.response?.data?.message || error.message,
       error.response?.status,
       error.response?.data?.code || error.code,
@@ -446,12 +437,22 @@ export class Api {
         responseData: error?.response?.data,
       })
     );
+  }
 
-    this.log("Erreur HTTP", apiError);
+  // MODIFIÉE pour accepter une ApiError au lieu de créer l'erreur
+  private handleRequestError(
+    apiError: ApiError,
+    context: {
+      endpoint: string;
+      method: HttpMethod;
+      service?: 'public' | 'private' | ServiceType;
+    }
+  ): void {
+    this.log('Erreur HTTP', apiError);
     this.config.onRequestError(apiError);
 
-    if (error.response?.status && error.response.status >= 500) {
-      this.log("Erreur serveur détectée");
+    if (apiError.status && apiError.status >= 500) {
+      this.log('Erreur serveur détectée');
     }
   }
 
@@ -474,7 +475,7 @@ export class Api {
     }
 
     if (newConfig.onRequest || newConfig.onResponse) {
-      this.log("Les intercepteurs personnalisés ont été mis à jour. Notez que les intercepteurs Axios existants ne sont pas automatiquement remplacés sans recréer l'instance ou éjecter les anciens.");
+      this.log('Les intercepteurs personnalisés ont été mis à jour. Notez que les intercepteurs Axios existants ne sont pas automatiquement remplacés sans recréer l\'instance ou éjecter les anciens.');
       // Ici, si besoin, il faudrait re-créer this.axiosInstance et re-configurer les intercepteurs
     }
   }

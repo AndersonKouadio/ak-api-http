@@ -1,4 +1,4 @@
-import { AxiosError, AxiosRequestConfig, AxiosResponse } from "axios";
+import { AxiosError, AxiosRequestConfig, AxiosResponse } from 'axios';
 
 export class ApiError extends Error {
   constructor(
@@ -8,38 +8,38 @@ export class ApiError extends Error {
     public context?: string
   ) {
     super(message);
-    this.name = "ApiError";
+    this.name = 'ApiError';
   }
 }
 
 export class AuthenticationError extends ApiError {
-  constructor(message: string = "Authentication failed") {
-    super(message, 401, "AUTHENTICATION_ERROR");
-    this.name = "AuthenticationError";
+  constructor(message: string) {
+    super(message, 401, 'AUTHENTICATION_ERROR');
+    this.name = 'AuthenticationError';
   }
 }
 
-export type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
+export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 export type SearchParams = Record<
   string,
   string | number | boolean | undefined
 >;
 
 export type ServiceType =
-  | "service_1"
-  | "service_2"
-  | "service_3"
-  | "service_4"
-  | "service_5";
+  | 'service_1'
+  | 'service_2'
+  | 'service_3'
+  | 'service_4'
+  | 'service_5';
 
-export type RequestConfig = {
+export interface RequestConfig {
   endpoint: string;
   method: HttpMethod;
   data?: any;
   searchParams?: SearchParams;
-  service?: "public" | "private" | ServiceType;
+  service?: 'public' | 'private' | ServiceType;
   config?: AxiosRequestConfig;
-};
+}
 
 export interface ServiceConfig {
   url: string;
