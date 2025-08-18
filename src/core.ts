@@ -48,7 +48,7 @@ export class Api {
       },
       getSession: options.getSession ?? (async () => null),
       signOut: options.signOut ?? (async () => {console.log('Sign out');}),
-      onRequestError: options.onRequestError ?? (() => {console.log('Request error');}),
+      onRequestError: options.onRequestError ?? (() => {console.log('');}),
       debug: options.debug ?? false,
       onRequest: options.onRequest ?? ((config) => config),
       onResponse: options.onResponse ?? ((response) => response),

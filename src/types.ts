@@ -22,7 +22,7 @@ export class AuthenticationError extends ApiError {
 export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 export type SearchParams = Record<
   string,
-  string | number | boolean | undefined
+  any
 >;
 
 export type ServiceType =
@@ -78,7 +78,6 @@ export interface ApiConfig {
   signOut?: SignOutFunction;
   onRequestError?: (error: ApiError) => void;
   debug?: boolean;
-  // Nouvelles propriétés pour les intercepteurs personnalisés
   onRequest?: RequestInterceptor;
   onResponse?: ResponseInterceptor;
 }
